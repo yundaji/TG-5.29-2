@@ -1,19 +1,19 @@
-name: Auto Post Telegram News
+name: Auto Post News
 
 on:
   schedule:
-    - cron: "0 2 * * *"
+    - cron: "0 0 * * *"
   workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
-  run-bot:
+  run:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Set up Python
@@ -21,26 +21,19 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install packages
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
+      - name: Install dependencies
+        run: pip install -r requirements.txt
 
-      - name: Run bot
+      - name: Run script
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
-          CHAT_ID: ${{ secrets.CHAT_ID }}
+          SHEET_CSV_URL: ${{ secrets.SHEET_CSV_URL }}
         run: python main.py
 
-      - name: Save seen.json
+      - name: Save seen files
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
-
-          if [ -f seen.json ]; then
-            git add seen.json
-            git commit -m "update seen.json" || echo "No changes to commit"
-            git push
-          else
-            echo "seen.json not found, skip commit"
-          fi
+          git add seen*.json || true
+          git commit -m "update seen files" || echo "No changes to commit"
+          git push || true
